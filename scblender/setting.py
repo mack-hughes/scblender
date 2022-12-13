@@ -229,7 +229,7 @@ def move_to_collection(object_name, collection_name):
                 pass
 
 
-def put_keyframe(name, frame, data_path="location"):
+def set_keyframe(name, frame, data_path="location"):
     """It puts a keyframe
 
     Args:
@@ -240,9 +240,10 @@ def put_keyframe(name, frame, data_path="location"):
     bpy.data.objects[name].keyframe_insert(data_path=data_path, frame=frame)
 
 
-def put_keyframe_vertices():
+def set_keyframe_vertices():
     bpy.data.window_managers["WinMan"].animall_properties.key_points = True
     bpy.ops.anim.insert_keyframe_animall()
+    return None
 
 
 def delete_keyframe():

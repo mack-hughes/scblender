@@ -20,73 +20,106 @@ class Particle:
     def __init__(
         self, name="particle", position=None, rotation=None, scale=None
     ) -> None:
-        self.name = name
+        self.__name = name
+
         try:
-            self.position = (
+            self.__position = (
                 position
                 if position != None
-                else (
-                    bpy.data.objects[self.name].location[0],
-                    bpy.data.objects[self.name].location[1],
-                    bpy.data.objects[self.name].location[2],
-                )
+                else [bpy.data.objects[self.__name].location[i] for i in range(3)]
             )
-            self.rotation = (
+            self.__rotation = (
                 rotation
                 if rotation != None
-                else (
-                    bpy.data.objects[self.name].rotation_euler[0],
-                    bpy.data.objects[self.name].rotation_euler[1],
-                    bpy.data.objects[self.name].rotation_euler[2],
-                )
+                else [bpy.data.objects[self.__name].rotation_euler[i] for i in range(3)]
+                
             )
-            self.scale = (
+            self.__scale = (
                 scale
                 if scale != None
-                else (
-                    bpy.data.objects[self.name].scale[0],
-                    bpy.data.objects[self.name].scale[1],
-                    bpy.data.objects[self.name].scale[2],
-                )
+                else [bpy.data.objects[self.__name].scale[i] for i in range(3)]
             )
         except:
             pass
 
+    def get_name(self) -> str:
+        return self.__name
+
+    def set_name(self, name:str) -> None:
+        bpy.data.objects[self.__name].name = name
+        self.__name = name
+        return None
+
+    def get_position(self) -> list:
+        return self.__position
+
+    def set_position(self, position:list) -> None:
+        if (self.__checking_the_type_and_the_dimensionality(position)):
+            bpy.data.objects[self.__name].location = position
+            self.__position = position
+        return None
+
+    def get_rotation(self)-> list:
+        return self.__rotation
+
+    def set_rotation(self, rotation:list)-> None:
+        if (self.__checking_the_type_and_the_dimensionality(rotation)):
+            bpy.data.objects[self.__name].rotation_euler = rotation
+            self.__rotation = rotation
+        return None
+
+    def get_scale(self) -> list:
+        return self.__scale
+
+    def set_scale(self, scale:list) -> None:
+        if (self.__checking_the_type_and_the_dimensionality(scale)):
+            bpy.data.objects[self.__name].scale = scale
+            self.__scale = scale
+        return None
+
+
+    def __checking_the_type_and_the_dimensionality(self, greatness) -> bool:
+        if ((len(greatness) == 3) and (isinstance(greatness, list) or isinstance(greatness, np.ndarray))): 
+            return True
+        else:
+            print("You must provide as input a list or a numpy array of length 3")
+            return False
+
+
+
     @property
-    def vertices(self):
+    def get_vertices(self):
         """
         Returns:
             array: It returns an array with the position of the vertices
         """
         bpy.ops.object.select_all(action="DESELECT")
-        bpy.data.objects[self.name].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[self.name]
+        bpy.data.objects[self.__name].select_set(True)
+        bpy.context.view_layer.objects.active = bpy.data.objects[self.__name]
         return [v.co for v in bpy.context.active_object.data.vertices]
 
-    def set_vertices(self, vertex: list, new_coordinate: list):
+    def set_vertices(self, vertex: list, new_coordinate: list) -> None:
         if bpy.context.active_object.mode == "EDIT":
             bpy.ops.object.editmode_toggle()
         bpy.ops.object.select_all(action="DESELECT")
-        bpy.data.objects[self.name].select_set(True)
+        bpy.data.objects[self.__name].select_set(True)
         bpy.context.active_object.data.vertices[vertex].co = new_coordinate
+        return None
 
-    def move(self, x=0, y=0, z=0):
-        bpy.data.objects[self.name].location = (x, y, z)
-        self.position = (x, y, z)
-        return self.position
+
 
     def rotate(self, yz=0, zx=0, xy=0):
-        bpy.data.objects[self.name].rotation_euler = (yz, zx, xy)
+        bpy.data.objects[self.__name].rotation_euler = (yz, zx, xy)
         self.rotation = (yz, zx, xy)
         return self.rotation
 
     def resize(self, sx=1, sy=1, sz=1) -> list:
-        bpy.data.objects[self.name].scale = (sx, sy, sz)
+        bpy.data.objects[self.__name].scale = (sx, sy, sz)
         self.scale = (sx, sy, sz)
         return self.scale
 
     def subdivide(self):
-        setting.select_particle(self.name)
+        setting.select_particle(self.__name)
         setting.set_object_mode("edit")
         return bpy.ops.mesh.subdivide()
 
@@ -94,16 +127,16 @@ class Particle:
         self, name_of_modifier="My_Modifier", type_of_modifier="SUBSURF"
     ):
         return setting.set_particle_visibility(
-            self.name
+            self.__name
         ), bpy.context.active_object.modifiers.new(name_of_modifier, type_of_modifier)
 
     def create_skin(self, name_of_modifier="Skin"):
         return setting.set_particle_visibility(
-            self.name
+            self.__name
         ), bpy.context.active_object.modifiers.new(name_of_modifier, "SKIN")
 
     def apply_shade_smooth(self):
-        return setting.set_particle_visibility(self.name), bpy.ops.object.shade_smooth()
+        return setting.set_particle_visibility(self.__name), bpy.ops.object.shade_smooth()
 
 
 class Sphere(Particle):
@@ -124,14 +157,14 @@ class Sphere(Particle):
             location=self.position,
             scale=self.scale,
         )
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
 
 
 class Vertice(Particle):
     def __init__(self, name="vertice", position=(0, 0, 0)):
         super().__init__(name=name, position=position)
         bpy.ops.mesh.primitive_vert_add()
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
         setting.set_object_mode("OBJECT"), self.move(
             position[0], position[1], position[2]
         )
@@ -157,8 +190,8 @@ class Mesh(Particle):
         # verts = bpy.context.active_object.data.vertices
         # edges = bpy.context.active_object.data.edges
         # faces = bpy.context.active_object.data.polygons
-        mesh = bpy.data.meshes.new(self.name)
-        obj = bpy.data.objects.new(self.name, mesh)
+        mesh = bpy.data.meshes.new(self.__name)
+        obj = bpy.data.objects.new(self.__name, mesh)
         col = bpy.data.collections.get("Collection")
         col.objects.link(obj)
         bpy.context.view_layer.objects.active = obj
@@ -175,7 +208,7 @@ class Path_curve(Particle):
             location=self.position,
             scale=self.scale,
         )
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
 
 
 class Bezier_curve(Particle):
@@ -194,7 +227,7 @@ class Bezier_curve(Particle):
             location=self.position,
             scale=self.scale,
         )
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
 
 
 class Camera(Particle):
@@ -217,7 +250,7 @@ class Camera(Particle):
             rotation=self.rotation,
             scale=self.scale,
         )
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
         bpy.context.object.data.lens = self.focal_length
 
 
@@ -245,9 +278,9 @@ class Timer(Particle):
         bpy.context.object.modifiers["Solidify"].thickness = 0.02
         bpy.context.object.data.align_x = "CENTER"
         bpy.context.object.data.align_y = "CENTER"
-        bpy.context.object.name = self.name
+        bpy.context.object.name = self.__name
         scene = bpy.context.scene
-        obj = scene.objects[self.name]
+        obj = scene.objects[self.__name]
 
         def recalculate_text(scene):
             if scene.frame_current in range(0, 60 * self.frame):
